@@ -68,7 +68,7 @@ class Node:
     Returns: `bool`
     """
     if self.parent is None: return True
-    return self.parent.children[0] == self
+    return self.parent.children[0] is self
 
   def isRightMost(self) -> bool:
     """
@@ -79,7 +79,7 @@ class Node:
     Returns: `bool`
     """
     if self.parent is None: return True
-    return self.parent.children[-1] == self
+    return self.parent.children[-1] is self
 
   def getLeftMostChild(self) -> Node or None:
     """
@@ -113,7 +113,7 @@ class Node:
 
     Returns: `None` if the node is a leaf, otherwise `Node`
     """
-    if currLevel == searchDepth: return self
+    if currLevel >= searchDepth: return self
     elif self.isLeaf(): return None
     else:
       currRightMost = self.getLeftMostChild()
