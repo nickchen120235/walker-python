@@ -75,9 +75,9 @@ l.leftSibling = k
 
 w = Walker(debug=True)
 
-w.addNodes([o, e, f, n, a, d, g, h, b, c, h, i, j, k, l])
+w.addNodes([o, e, f, n, a, d, g, h, b, c, m, i, j, k, l])
 
 w.positionTree()
 
-for node in [o, e, f, n, a, d, g, h, b, c, h, i, j, k, l]:
+for node in [o, e, f, n, a, d, g, h, b, c, m, i, j, k, l]:
   print(f'Node: {node.id}, Final X: {node.x}')
