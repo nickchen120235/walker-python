@@ -101,7 +101,7 @@ class Walker:
       if currNode.leftSibling: currNode.preX =currNode.leftSibling.preX + self.config['NODE_SEPARATION'] + self.config['NODE_SIZE']
       else: currNode.preX = 0
 
-    if self.debug: print('[_firstwalk] leaving')
+    if self.debug: print(f'[_firstwalk] leaving from Node {currNode.id}')
 
   def _apportion(self, currNode: Node, level: int) -> None:
     """
@@ -166,7 +166,7 @@ class Walker:
       if leftMost.isLeaf(): leftMost = currNode.getLeftMost(0, currNode)
       else: leftMost = leftMost.children[0]
       if leftMost: neighbor = leftMost.prev
-    if self.debug: print('[_apportion] leaving')
+    if self.debug: print(f'[_apportion] leaving from Node {currNode.id}')
     ### end of _apportion ###
 
   def _secondwalk(self, currNode: Node, level: int, modSum: int) -> bool:
@@ -202,7 +202,7 @@ class Walker:
       else: result = False
     else: result = True
 
-    if self.debug: print('[_secondwalk] leaving')
+    if self.debug: print(f'[_secondwalk] leaving from Node {currNode.id}')
     return result
 
   def _checkExtentsRange(self, x: int, y: int) -> bool:
