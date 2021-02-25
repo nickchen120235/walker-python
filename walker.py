@@ -57,8 +57,15 @@ class Walker:
     Returns: None
     """
     self._firstwalk(self.nodes[0], 0)
-    if self.debug: print('[positionTree] _firstwalk completed')
-    self._secondwalk(self.nodes[0], 0, 0)
+    if self.debug: 
+      print('[positionTree] _firstwalk completed')
+      print('\tNode\tPRELIM\tMODIFIER')
+      for node in self.nodes: print(f'\t{node.id}\t{node.preX}\t{node.modifier}')
+    final = self._secondwalk(self.nodes[0], 0, 0)
+    if self.debug:
+      print(f'[positionTree] _secondwalk completed, returns {final}')
+      print('\tNode\tX\tY')
+      for node in self.nodes: print(f'\t{node.id}\t{node.x}\t{node.y}')
 
   def _firstwalk(self, currNode: Node, level: int) -> None:
     """
@@ -75,31 +82,33 @@ class Walker:
     if self.debug: print(f'[_firstwalk] Node {currNode.id}, Level: {level}, isLeaf: {currNode.isLeaf()}')
 
     currNode.modifier = 0
-    midPoint = 0
     currNode.prev = self._prevAtLevel[level]
+    if self.debug: print(f'[_firstwalk] currNode.prev = {currNode.prev.id if currNode.prev else None}')
     self._prevAtLevel[level] = currNode
+    if self.debug: print(f'[_firstwalk] _prevAtLevel[{level}] = {self._prevAtLevel[level].id}')
 
-    if not (currNode.isLeaf() or level == self.config['MAX_DEPTH']):
+    if currNode.isLeaf() or level == self.config['MAX_DEPTH']:
+      if self.debug: print(f'[_firstwalk] has left sibling: {bool(currNode.leftSibling)}')
+      if currNode.leftSibling: currNode.preX = currNode.leftSibling.preX + self.config['NODE_SEPARATION'] + self.config['NODE_SIZE']
+      else: currNode.preX = 0
+
+    else:
     # currNode is not a leaf, so call _firstwalk recursively for each of its offspring
-      left = currNode.getLeftMostChild()
-      right = currNode.getRightMostChild()
+      left = right = currNode.getLeftMostChild()
       self._firstwalk(left, level + 1)
 
-      while left.rightSibling:
-        left = left.rightSibling
-        self._firstwalk(left, level + 1)
+      while right.rightSibling:
+        right = right.rightSibling
+        self._firstwalk(right, level + 1)
 
-      midPoint = (currNode.children[0].preX + currNode.children[-1].preX) / 2
+      midPoint = (left.preX + right.preX) / 2
 
+      if self.debug: print(f'[_firstwalk] has left sibling: {bool(currNode.leftSibling)}')
       if currNode.leftSibling:
         currNode.preX = currNode.leftSibling.preX + self.config['NODE_SEPARATION'] + self.config['NODE_SIZE']
         currNode.modifier = currNode.preX - midPoint
         self._apportion(currNode, level)
       else: currNode.preX = midPoint
-
-    else:
-      if currNode.leftSibling: currNode.preX =currNode.leftSibling.preX + self.config['NODE_SEPARATION'] + self.config['NODE_SIZE']
-      else: currNode.preX = 0
 
     if self.debug: print(f'[_firstwalk] leaving from Node {currNode.id}')
 
@@ -120,7 +129,7 @@ class Walker:
     Returns: None
 
     """
-    if self.debug: print(f'[_apportion] Node {currNode.id}, Level: {level}')
+    if self.debug: print(f'[_apportion] Node {currNode.id}, Level: {level}, leftMost: {currNode.children[0].id}, neighbor: {currNode.children[0].prev.id if currNode.children[0].prev else None}')
 
     leftMost = currNode.children[0]
     depthToStop = self.config['MAX_DEPTH'] - level
@@ -129,7 +138,8 @@ class Walker:
 
     while leftMost and neighbor and compareDepth <= depthToStop:
     # Compute the location of leftmost and where it should be with respect to neighbor
-      rightModSum = leftModSum = 0
+      leftModSum = 0
+      rightModSum = 0
       leftMostAncestor = leftMost
       neighborAncestor = neighbor
 
@@ -138,32 +148,39 @@ class Walker:
         neighborAncestor = neighborAncestor.parent
         rightModSum += leftMostAncestor.modifier
         leftModSum += neighborAncestor.modifier
+        if self.debug: print(f'[_apportion] leftMostAncestor: {leftMostAncestor.id}, neighborAncestor: {neighborAncestor.id}, rightModSum: {rightModSum}, leftModSum: {leftModSum}')
 
       # Find the distance and apply it to currNode's subtree
       # Add appropriate portions to smaller interior subtrees
       distance = neighbor.preX + leftModSum + self.config['TREE_SEPARATION'] + self.config['NODE_SIZE'] - (leftMost.preX + rightModSum)
+      if self.debug: print(f'[_apportion] distance: {distance}')
       if distance > 0:
       # Count interior sibling subtrees in LeftSiblings
         leftSiblings = 0
         tempNode = currNode
+        if self.debug: print(f'[_apportion] tempNode: {tempNode.id}, neighborAncestor: {neighborAncestor.id}')
         while tempNode and tempNode is not neighborAncestor:
           leftSiblings += 1
           tempNode = tempNode.leftSibling
+          if self.debug: print(f'[_apportion] tempNode: {tempNode.id if tempNode else None}, neighborAncestor: {neighborAncestor.id}')
         
         if tempNode:
         # Apply portions to appropriate leftsibling subtrees
           proportion = distance / leftSiblings
-          while tempNode and tempNode is not neighborAncestor:
+          tempNode = currNode
+          while tempNode is not neighborAncestor:
+            if self.debug: print(f'[_apportion] tempNode is not neighborAncestor')
             tempNode.preX += distance
             tempNode.modifier += distance
             distance -= proportion
             tempNode = tempNode.leftSibling
-        else: return
+        else:
+          return
       ### end of distance > 0 ###
 
       # Determine the leftmost descendant of currNode at the next lower level to compare its positioning against that of its neighbor
       compareDepth += 1
-      if leftMost.isLeaf(): leftMost = currNode.getLeftMost(0, currNode)
+      if leftMost.isLeaf(): leftMost = currNode.getLeftMost(0, compareDepth)
       else: leftMost = leftMost.children[0]
       if leftMost: neighbor = leftMost.prev
     if self.debug: print(f'[_apportion] leaving from Node {currNode.id}')
@@ -191,7 +208,7 @@ class Walker:
 
     if level < self.config['MAX_DEPTH']:
       tempX = self.config['X_TOP'] + currNode.preX + modSum
-      tempY - self.config['Y_TOP'] + (level * self.config['LEVEL_SEPARATION'])
+      tempY = self.config['Y_TOP'] + (level * self.config['LEVEL_SEPARATION'])
 
       if self._checkExtentsRange(tempX, tempY): 
         currNode.x = tempX
