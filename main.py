@@ -73,11 +73,11 @@ k.rightSibling = l
 l.parent = m
 l.leftSibling = k
 
-w = Walker(debug=True)
+w = Walker(debug=True, rootX = 0, rootY = 0)
+w.config['NODE_SIZE'] = 2
+w.config['NODE_SEPARATION'] = 4
+w.config['TREE_SEPARATION'] = 4
 
-w.addNodes([o, e, f, n, a, d, g, h, b, c, m, i, j, k, l])
+w.addNodes([o, e, f, n, a, d, g, m, b, c, h, i, j, k, l])
 
 w.positionTree()
-
-for node in [o, e, f, n, a, d, g, h, b, c, m, i, j, k, l]:
-  print(f'Node: {node.id}, Final X: {node.x}')
