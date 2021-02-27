@@ -18,6 +18,13 @@ class Walker:
   def __init__(self, rootX: int = 50, rootY: int = 50, debug: bool = False) -> None:
     """
     constructor
+
+    Parameters:
+    - `rootX`: type `int`, optional, the least x coordinate of the graph, defaults to 50
+    - `rootY`: type `int`, optional, the least y coordinate of the graph, defaults to 50
+    - `debug`: type `bool`, optional, whether to print debugging information, defaults to False
+
+    Returns: None
     """
     self.config = {
       'LEVEL_SEPARATION': 160,
