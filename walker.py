@@ -11,10 +11,11 @@ class Walker:
   - `nodes`: all nodes in the tree
 
   Methods:
-  - `addNode(node)`: add node to the tree, returns `None`
-  - `positionTree()`: do the layout, returns `None`
+  - `add_node(node)`: add node to the tree, returns `None`
+  - `add_nodes(nodes)`: add list of nodes to the tree, returns `None`
+  - `position_tree()`: do the layout, returns `None`
   """
-  def __init__(self, rootX: int = 50, rootY: int = 50, debug: bool = False) -> None: 
+  def __init__(self, rootX: int = 50, rootY: int = 50, debug: bool = False) -> None:
     """
     constructor
     """
@@ -31,10 +32,10 @@ class Walker:
       'Y_TOP': rootY
     }
     self.nodes: list[Node] = []
-    self._prevAtLevel: list[Node or None] = [None] * self.config['MAX_DEPTH']
+    self._prev_at_level: list[Node or None] = [None] * self.config['MAX_DEPTH']
     self.debug = debug
 
-  def addNode(self, node: Node) -> None:
+  def add_node(self, node: Node) -> None:
     """
     add node to the tree
 
@@ -45,10 +46,19 @@ class Walker:
     """
     self.nodes.append(node)
 
-  def addNodes(self, nodes: list[Node]) -> None:
-    for node in nodes: self.addNode(node)
+  def add_nodes(self, nodes: list[Node]) -> None:
+    """
+    add list of nodes to the tree
 
-  def positionTree(self) -> None:
+    Parameters:
+    - `nodes`: type `list[Node]`, required
+
+    Returns: None
+    """
+    for node in nodes:
+      self.add_node(node)
+
+  def position_tree(self) -> None:
     """
     do the layout
 
@@ -57,170 +67,174 @@ class Walker:
     Returns: None
     """
     self._firstwalk(self.nodes[0], 0)
-    if self.debug: 
-      print('[positionTree] _firstwalk completed')
+    if self.debug:
+      print('[position_tree] _firstwalk completed')
       print('\tNode\tPRELIM\tMODIFIER')
-      for node in self.nodes: print(f'\t{node.id}\t{node.preX}\t{node.modifier}')
+      for node in self.nodes:
+        print(f'\t{node.id}\t{node.prelim}\t{node.modifier}')
+
     final = self._secondwalk(self.nodes[0], 0, 0)
     if self.debug:
-      print(f'[positionTree] _secondwalk completed, returns {final}')
+      print(f'[position_tree] _secondwalk completed, returns {final}')
       print('\tNode\tX\tY')
-      for node in self.nodes: print(f'\t{node.id}\t{node.x}\t{node.y}')
+      for node in self.nodes:
+        print(f'\t{node.id}\t{node.x}\t{node.y}')
 
-  def _firstwalk(self, currNode: Node, level: int) -> None:
+  def _firstwalk(self, curr: Node, level: int) -> None:
     """
     post-order traversal and assigns preliminary x coordinate and modifier values to each node
 
     `_apportion` is called where tree balancing is needed
 
     Parameters:
-    - `currNode`: type `Node`, required, local root
+    - `curr`: type `Node`, required, local root
     - `level`: type `int`, required, current level
 
     Returns: None
     """
-    if self.debug: print(f'[_firstwalk] Node {currNode.id}, Level: {level}, isLeaf: {currNode.isLeaf()}')
+    if self.debug: print(f'[_firstwalk] Node {curr.id}, Level: {level}, isLeaf: {curr.is_leaf()}')
 
-    currNode.modifier = 0
-    currNode.prev = self._prevAtLevel[level]
-    if self.debug: print(f'[_firstwalk] currNode.prev = {currNode.prev.id if currNode.prev else None}')
-    self._prevAtLevel[level] = currNode
-    if self.debug: print(f'[_firstwalk] _prevAtLevel[{level}] = {self._prevAtLevel[level].id}')
+    curr.modifier = 0
+    curr.left_neighbor = self._prev_at_level[level]
+    if self.debug: print(f'[_firstwalk] curr.left_neighbor = {curr.left_neighbor.id if curr.left_neighbor else None}')
+    self._prev_at_level[level] = curr
+    if self.debug: print(f'[_firstwalk] _prev_at_level[{level}] = {self._prev_at_level[level].id}')
 
-    if currNode.isLeaf() or level == self.config['MAX_DEPTH']:
-      if self.debug: print(f'[_firstwalk] has left sibling: {bool(currNode.leftSibling)}')
-      if currNode.leftSibling: currNode.preX = currNode.leftSibling.preX + self.config['NODE_SEPARATION'] + self.config['NODE_SIZE']
-      else: currNode.preX = 0
+    if curr.is_leaf() or level == self.config['MAX_DEPTH']:
+      if self.debug: print(f'[_firstwalk] has left sibling: {bool(curr.left_sibling)}')
+      if curr.left_sibling:
+        curr.prelim = curr.left_sibling.prelim + self.config['NODE_SEPARATION'] + self.config['NODE_SIZE']
+      else: curr.prelim = 0
 
     else:
-    # currNode is not a leaf, so call _firstwalk recursively for each of its offspring
-      left = right = currNode.getLeftMostChild()
+    # curr is not a leaf, so call _firstwalk recursively for each of its offspring
+      left = right = curr.get_leftmost_child()
       self._firstwalk(left, level + 1)
 
-      while right.rightSibling:
-        right = right.rightSibling
+      while right.right_sibling:
+        right = right.right_sibling
         self._firstwalk(right, level + 1)
 
-      midPoint = (left.preX + right.preX) / 2
+      midpoint = (left.prelim + right.prelim) / 2
 
-      if self.debug: print(f'[_firstwalk] has left sibling: {bool(currNode.leftSibling)}')
-      if currNode.leftSibling:
-        currNode.preX = currNode.leftSibling.preX + self.config['NODE_SEPARATION'] + self.config['NODE_SIZE']
-        currNode.modifier = currNode.preX - midPoint
-        self._apportion(currNode, level)
-      else: currNode.preX = midPoint
+      if self.debug: print(f'[_firstwalk] has left sibling: {bool(curr.left_sibling)}')
+      if curr.left_sibling:
+        curr.prelim = curr.left_sibling.prelim + self.config['NODE_SEPARATION'] + self.config['NODE_SIZE']
+        curr.modifier = curr.prelim - midpoint
+        self._apportion(curr, level)
+      else: curr.prelim = midpoint
 
-    if self.debug: print(f'[_firstwalk] leaving from Node {currNode.id}')
+    if self.debug: print(f'[_firstwalk] leaving from Node {curr.id}')
 
-  def _apportion(self, currNode: Node, level: int) -> None:
+  def _apportion(self, curr: Node, level: int) -> None:
     """
     trace subtree contours and determines whether they are OK or there's overlapping
 
-    if overlap exists, this function will add spacing to the rightmost of the two 
+    if overlap exists, this function will add spacing to the rightmost of the two
     subtrees being compared.
 
-    The function will then add up the number of subtrees in between the two trees 
+    The function will then add up the number of subtrees in between the two trees
     under comparison and will allocate the additional spacing among them
 
     Parameters:
-    - `currNode`: type `Node`, required, left lowest descendent of a tree
+    - `curr`: type `Node`, required, left lowest descendent of a tree
     - `level`: type `int`, required, current level
 
     Returns: None
 
     """
-    if self.debug: print(f'[_apportion] Node {currNode.id}, Level: {level}, leftMost: {currNode.children[0].id}, neighbor: {currNode.children[0].prev.id if currNode.children[0].prev else None}')
+    if self.debug: print(f'[_apportion] Node {curr.id}, Level: {level}, leftMost: {curr.children[0].id}, neighbor: {curr.children[0].left_neighbor.id if curr.children[0].left_neighbor else None}')
 
-    leftMost = currNode.children[0]
-    depthToStop = self.config['MAX_DEPTH'] - level
-    neighbor = leftMost.prev
-    compareDepth = 1
+    leftmost = curr.children[0]
+    depth_to_stop = self.config['MAX_DEPTH'] - level
+    neighbor = leftmost.left_neighbor
+    compare_depth = 1
 
-    while leftMost and neighbor and compareDepth <= depthToStop:
+    while leftmost and neighbor and compare_depth <= depth_to_stop:
+      if self.debug: print(f'[_apportion] compare_depth: {compare_depth}')
     # Compute the location of leftmost and where it should be with respect to neighbor
-      leftModSum = 0
-      rightModSum = 0
-      leftMostAncestor = leftMost
-      neighborAncestor = neighbor
+      left_mod_sum = 0
+      right_mod_sum = 0
+      leftmost_ancestor = leftmost
+      neighbor_ancestor = neighbor
 
-      for i in range(0, compareDepth):
-        leftMostAncestor = leftMostAncestor.parent
-        neighborAncestor = neighborAncestor.parent
-        rightModSum += leftMostAncestor.modifier
-        leftModSum += neighborAncestor.modifier
-        if self.debug: print(f'[_apportion] leftMostAncestor: {leftMostAncestor.id}, neighborAncestor: {neighborAncestor.id}, rightModSum: {rightModSum}, leftModSum: {leftModSum}')
+      for _ in range(0, compare_depth): # pylint: disable=unused-variable
+        leftmost_ancestor = leftmost_ancestor.parent
+        neighbor_ancestor = neighbor_ancestor.parent
+        right_mod_sum += leftmost_ancestor.modifier
+        left_mod_sum += neighbor_ancestor.modifier
+        if self.debug: print(f'[_apportion] leftmost_ancestor: {leftmost_ancestor.id}, neighbor_ancestor: {neighbor_ancestor.id}, right_mod_sum: {right_mod_sum}, left_mod_sum: {left_mod_sum}')
 
-      # Find the distance and apply it to currNode's subtree
+      # Find the distance and apply it to curr's subtree
       # Add appropriate portions to smaller interior subtrees
-      distance = neighbor.preX + leftModSum + self.config['TREE_SEPARATION'] + self.config['NODE_SIZE'] - (leftMost.preX + rightModSum)
+      distance = neighbor.prelim + left_mod_sum + self.config['TREE_SEPARATION'] + self.config['NODE_SIZE'] - (leftmost.prelim + right_mod_sum)
       if self.debug: print(f'[_apportion] distance: {distance}')
       if distance > 0:
       # Count interior sibling subtrees in LeftSiblings
-        leftSiblings = 0
-        tempNode = currNode
-        if self.debug: print(f'[_apportion] tempNode: {tempNode.id}, neighborAncestor: {neighborAncestor.id}')
-        while tempNode and tempNode is not neighborAncestor:
-          leftSiblings += 1
-          tempNode = tempNode.leftSibling
-          if self.debug: print(f'[_apportion] tempNode: {tempNode.id if tempNode else None}, neighborAncestor: {neighborAncestor.id}')
-        
-        if tempNode:
+        left_siblings = 0
+        temp = curr
+        if self.debug: print(f'[_apportion] temp: {temp.id}, neighbor_ancestor: {neighbor_ancestor.id}')
+        while temp and temp is not neighbor_ancestor:
+          left_siblings += 1
+          temp = temp.left_sibling
+          if self.debug: print(f'[_apportion] temp: {temp.id if temp else None}, neighbor_ancestor: {neighbor_ancestor.id}')
+
+        if temp:
         # Apply portions to appropriate leftsibling subtrees
-          proportion = distance / leftSiblings
-          tempNode = currNode
-          while tempNode is not neighborAncestor:
-            if self.debug: print(f'[_apportion] tempNode is not neighborAncestor')
-            tempNode.preX += distance
-            tempNode.modifier += distance
+          proportion = distance / left_siblings
+          temp = curr
+          while temp is not neighbor_ancestor:
+            if self.debug: print('[_apportion] temp is not neighbor_ancestor')
+            temp.prelim += distance
+            temp.modifier += distance
             distance -= proportion
-            tempNode = tempNode.leftSibling
+            temp = temp.left_sibling
         else:
           return
       ### end of distance > 0 ###
 
-      # Determine the leftmost descendant of currNode at the next lower level to compare its positioning against that of its neighbor
-      compareDepth += 1
-      if leftMost.isLeaf(): leftMost = currNode.getLeftMost(0, compareDepth)
-      else: leftMost = leftMost.children[0]
-      if leftMost: neighbor = leftMost.prev
-    if self.debug: print(f'[_apportion] leaving from Node {currNode.id}')
+      # Determine the leftmost descendant of curr at the next lower level to compare its positioning against that of its neighbor
+      compare_depth += 1
+      if leftmost.is_leaf():
+        leftmost = curr.get_leftmost(0, compare_depth)
+      else: leftmost = leftmost.children[0]
+      if leftmost: neighbor = leftmost.left_neighbor
+    if self.debug: print(f'[_apportion] leaving from Node {curr.id}')
     ### end of _apportion ###
 
-  def _secondwalk(self, currNode: Node, level: int, modSum: int) -> bool:
+  def _secondwalk(self, curr: Node, level: int, mod_sum: int) -> bool:
     """
     pre-order traversal and calculates final x coordinates from modifier totals to each node
 
     Parameters:
-    - `currNode`: type `Node`, required, current node
+    - `curr`: type `Node`, required, current node
     - `level`: type `int`, required, current level
-    - `modSum`: type `int`, required, current modSum
+    - `mod_sum`: type `int`, required, current mod_sum
 
     Returns: `True` if no errors, otherwise `False`
     """
-    if self.debug: print(f'[_secondwalk] Node: {currNode.id}, Level: {level}, modSum: {modSum}')
+    if self.debug: print(f'[_secondwalk] Node: {curr.id}, Level: {level}, mod_sum: {mod_sum}')
 
     result = True
 
-    tempX = 0
-    tempY = 0
-
-    newModSum = 0
+    temp_x = 0
+    temp_y = 0
 
     if level < self.config['MAX_DEPTH']:
-      tempX = self.config['X_TOP'] + currNode.preX + modSum
-      tempY = self.config['Y_TOP'] + (level * self.config['LEVEL_SEPARATION'])
+      temp_x = self.config['X_TOP'] + curr.prelim + mod_sum
+      temp_y = self.config['Y_TOP'] + (level * self.config['LEVEL_SEPARATION'])
 
-      if self._checkExtentsRange(tempX, tempY): 
-        currNode.x = tempX
-        currNode.y = tempY
+      if self._checkExtentsRange(temp_x, temp_y):
+        curr.x = temp_x
+        curr.y = temp_y
 
-        if len(currNode.children) != 0: result = self._secondwalk(currNode.children[0], level + 1, modSum + currNode.modifier)
-        if result and currNode.rightSibling: result = self._secondwalk(currNode.rightSibling, level, modSum)
+        if len(curr.children) != 0: result = self._secondwalk(curr.children[0], level + 1, mod_sum + curr.modifier)
+        if result and curr.right_sibling: result = self._secondwalk(curr.right_sibling, level, mod_sum)
       else: result = False
     else: result = True
 
-    if self.debug: print(f'[_secondwalk] leaving from Node {currNode.id}')
+    if self.debug: print(f'[_secondwalk] leaving from Node {curr.id}')
     return result
 
-  def _checkExtentsRange(self, x: int, y: int) -> bool:
+  def _checkExtentsRange(self, x: int, y: int) -> bool: # pylint: disable=invalid-name, unused-argument
     return True
