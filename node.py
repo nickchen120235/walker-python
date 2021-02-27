@@ -6,26 +6,30 @@ class Node:
 
   Properties:
   - `parent`: type `Node | None`, parent of the node
-  - `leftSibling`: type `Node | None`, left sibling of the node
-  - `rightSibling`: type `Node | None`, right sibling of the node
+  - `left_sibling`: type `Node | None`, left sibling of the node
+  - `right_sibling`: type `Node | None`, right sibling of the node
   - `children`: type `list[Node]`, children of the node
   - `id`: type `int`, ID of the node
   - `x`, `y`: type `int`, coordinates of the node
-  - `preX`: type `int`, preliminary x coordinates of the node
+  - `prelim`: type `int`, preliminary x coordinates of the node
   - `modifier`: type `int`, modifier value of the node
-  - `leftNeighbor`: type `Node`, nearest neighbor of the node to the left at the same level
+  - `left_neighbor`: type `Node`, nearest neighbor of the node to the left at the same level
 
   Methods:
-  - `__init__(parent = None, lSib = None, rSib = None, children = [], id = 0)`: constructor, returns `None`
-  - `isLeaf()`: check whether the node is a leaf, returns `bool`
-  - `isLeftMost()`: check whether the node is the leftmost child of its parent, returns `bool`
-  - `isRightMost()`: check whether the node is the rightmost child of its parent, returns `bool`
-  - `getLeftMostChild()`: get the leftmost child of the node, returns `None` if the node is a leaf, otherwise `Node`
-  - `getRightMostChild()`: get the rightmost child of the node, returns `None` if the node is a leaf, otherwise `Node`
-  - `getLeftMost(currLevel, searchDepth)`: get the leftmost descendant of the node at a given depth, returns `None` if the node is a leaf, otherwise `Node`
+  - `__init__(parent = None, lSib = None, rSib = None, children = None, id = 0)`: constructor, returns `None`
+  - `is_leaf()`: check whether the node is a leaf, returns `bool`
+  - `is_leftmost()`: check whether the node is the leftmost child of its parent, returns `bool`
+  - `is_rightmost()`: check whether the node is the rightmost child of its parent, returns `bool`
+  - `get_leftmost_child()`: get the leftmost child of the node, returns `None` if the node is a leaf, otherwise `Node`
+  - `get_rightmost_child()`: get the rightmost child of the node, returns `None` if the node is a leaf, otherwise `Node`
+  - `get_leftmost(curr_level, search_depth)`: get the leftmost descendant of the node at a given depth, returns `None` if the node is a leaf, otherwise `Node`
 
   """
-  def __init__(self, parent: Node or None = None, lSib: Node or None = None, rSib: Node or None = None, children: list[Node] = [], id: int or str = 0) -> None:
+  def __init__(self, parent: Node or None = None,
+               lSib: Node or None = None,
+               rSib: Node or None = None,
+               children: list[Node] or None = None,
+               ID: int or str = 0) -> None:
     """
     constructor
 
@@ -39,17 +43,17 @@ class Node:
     Returns: `None`
     """
     self.parent = parent
-    self.leftSibling = lSib
-    self.rightSibling = rSib
-    self.children = children
-    self.id = id
+    self.left_sibling = lSib
+    self.right_sibling = rSib
+    self.children = children if children is not None else []
+    self.id = ID
     self.x = 0
     self.y = 0
-    self.preX = 0
+    self.prelim = 0
     self.modifier = 0
-    self.prev: Node or None = None
-  
-  def isLeaf(self) -> bool:
+    self.left_neighbor: Node or None = None
+
+  def is_leaf(self) -> bool:
     """
     check whether the node is a leaf
 
@@ -59,7 +63,7 @@ class Node:
     """
     return len(self.children) == 0
 
-  def isLeftMost(self) -> bool:
+  def is_leftmost(self) -> bool:
     """
     check whether the node is the leftmost child of its parent
 
@@ -70,7 +74,7 @@ class Node:
     if self.parent is None: return True
     return self.parent.children[0] is self
 
-  def isRightMost(self) -> bool:
+  def is_rightmost(self) -> bool:
     """
     check whether the node is the rightmost child of its parent
 
@@ -81,7 +85,7 @@ class Node:
     if self.parent is None: return True
     return self.parent.children[-1] is self
 
-  def getLeftMostChild(self) -> Node or None:
+  def get_leftmost_child(self) -> Node or None:
     """
     get the leftmost child of the node
 
@@ -92,7 +96,7 @@ class Node:
     if len(self.children) == 0: return None
     return self.children[0]
 
-  def getRightMostChild(self) -> Node or None:
+  def get_rightmost_child(self) -> Node or None:
     """
     get the rightmost child of the node
 
@@ -103,24 +107,26 @@ class Node:
     if len(self.children) == 0: return None
     return self.children[-1]
 
-  def getLeftMost(self, currLevel: int, searchDepth: int) -> Node or None:
+  def get_leftmost(self, curr_level: int, search_depth: int) -> Node or None:
     """
     get the leftmost descendant of the node at a given depth
 
-    Parameters: 
-    - `currLevel`: type `int`, required, current level of search
-    - `searchDepth`: type `int`, required, the target level of search
+    Parameters:
+    - `curr_level`: type `int`, required, current level of search
+    - `search_depth`: type `int`, required, the target level of search
 
     Returns: `None` if the node is a leaf, otherwise `Node`
     """
-    if currLevel >= searchDepth: return self
-    elif self.isLeaf(): return None
+    if curr_level >= search_depth:
+      return self
+    elif self.is_leaf():
+      return None
     else:
-      currRightMost = self.getLeftMostChild()
-      currLeftMost = currRightMost.getLeftMost(currLevel + 1, searchDepth)
+      curr_rightmost = self.get_leftmost_child()
+      curr_leftmost = curr_rightmost.get_leftmost(curr_level + 1, search_depth)
 
-      while currLeftMost is None and currRightMost.rightSibling is not None:
-        currRightMost = currRightMost.rightSibling
-        currLeftMost = currRightMost.getLeftMost(currLevel + 1, searchDepth)
-      
-      return currLeftMost
+      while curr_leftmost is None and curr_rightmost.right_sibling is not None:
+        curr_rightmost = curr_rightmost.right_sibling
+        curr_leftmost = curr_rightmost.get_leftmost(curr_level + 1, search_depth)
+
+      return curr_leftmost
