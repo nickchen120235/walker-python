@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+import random
+
 from node import Node
 
 class Walker:
@@ -65,6 +68,48 @@ class Walker:
     for node in nodes:
       self.add_node(node)
 
+  def add_nodes_from_json(self, filename: str) -> None:
+    """
+    add nodes to the tree from a json file in the following format
+    ```
+    {
+      "nodes": [
+        {"id": "<some string>"}
+      ],
+      "links": [
+        {"src": "<id from node>", "to": "<id from node>"}
+      ]
+    }
+    ```
+
+    Parameters:
+    - `filename`: type `str`, required, path to json file
+
+    Returns: None
+    """
+    with open(filename, 'r') as f:
+      if self.debug: print(f'[add_nodes_from_json] loading from {filename}')
+      data: dict = json.load(f)
+      if self.debug: print(f"[add_nodes_from_json] found {len(data['nodes'])} nodes")
+      self.nodes: list[Node] = [Node(ID = node['id']) for node in data['nodes']]
+
+      for link in data['links']:
+        src = [n for n in self.nodes if n.id == link['src']][0]
+        to = [n for n in self.nodes if n.id == link['to']][0]
+        if self.debug: print(f"[add_nodes_from_json] found link {link['src']} -> {link['to']}")
+        to.parent = src
+        src.children.append(to)
+
+      for node in self.nodes:
+        self._set_sibling(node.children)
+
+      if self.debug:
+        print('[add_nodes_from_json] left/right siblings list')
+        for node in self.nodes:
+          print(f'\t{node.left_sibling.id if node.left_sibling else None}\t<- {node.id} ->\t{node.right_sibling.id if node.right_sibling else None}')
+
+
+
   def position_tree(self) -> None:
     """
     do the layout
@@ -73,14 +118,19 @@ class Walker:
 
     Returns: None
     """
-    self._firstwalk(self.nodes[0], 0)
+    root = random.choice(self.nodes)
+    while root.parent is not None:
+      root = root.parent
+    if self.debug: print(f'[position_tree] starting from node {root.id}')
+
+    self._firstwalk(root, 0)
     if self.debug:
       print('[position_tree] _firstwalk completed')
       print('\tNode\tPRELIM\tMODIFIER')
       for node in self.nodes:
         print(f'\t{node.id}\t{node.prelim}\t{node.modifier}')
 
-    final = self._secondwalk(self.nodes[0], 0, 0)
+    final = self._secondwalk(root, 0, 0)
     if self.debug:
       print(f'[position_tree] _secondwalk completed, returns {final}')
       print('\tNode\tX\tY')
@@ -244,4 +294,33 @@ class Walker:
     return result
 
   def _checkExtentsRange(self, x: int, y: int) -> bool: # pylint: disable=invalid-name, unused-argument
+    """
+    TBD
+    """
     return True
+
+  def _set_sibling(self, nodes: list[Node]) -> None:
+    """
+    set siblings from given nodes
+
+    if `len(nodes)` is `2`, then `nodes[0].right_sibling = nodes[1]`, `nodes[1].left_sibling = nodes[0]`
+
+    if `len(nodes)` > `2`, then `nodes[i].left_sibling = nodes[i - 1]`, `nodes[i].right_sibling = nodes[i + 1]`
+
+    Parameters: 
+    - nodes: type `list[Node]`, required, list of nodes
+
+    Returns: None
+    """
+    if len(nodes) < 2:
+      return
+    elif len(nodes) == 2:
+      nodes[0].right_sibling = nodes[1]
+      nodes[1].left_sibling = nodes[0]
+      return
+    else:
+      nodes[0].right_sibling = nodes[1]
+      for i in range(1, len(nodes) - 1):
+        nodes[i].left_sibling = nodes[i - 1]
+        nodes[i].right_sibling = nodes[i + 1]
+      nodes[len(nodes) - 1].left_sibling = nodes[len(nodes) - 2]
