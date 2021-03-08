@@ -88,7 +88,7 @@ class Walker:
     Returns: None
     """
     with open(filename, 'r') as f:
-      if self.debug: print(f'[add_nodes_from_json] loading from {filename}')
+      print(f'[add_nodes_from_json] loading from {filename}')
       data: dict = json.load(f)
       if self.debug: print(f"[add_nodes_from_json] found {len(data['nodes'])} nodes")
       self.nodes: list[Node] = [Node(ID = node['id']) for node in data['nodes']]
@@ -124,7 +124,7 @@ class Walker:
       print('[export_to_json] final json')
       print(res)
     with open(filename, 'w') as f:
-      if self.debug: print(f'[export_to_json] export to {filename}')
+      print(f'[export_to_json] export to {filename}')
       f.write(res)
 
 
@@ -139,18 +139,18 @@ class Walker:
     root = random.choice(self.nodes)
     while root.parent is not None:
       root = root.parent
-    if self.debug: print(f'[position_tree] starting from node {root.id}')
+    print(f'[position_tree] starting from node {root.id}')
 
     self._firstwalk(root, 0)
+    print('[position_tree] _firstwalk completed')
     if self.debug:
-      print('[position_tree] _firstwalk completed')
       print('\tNode\tPRELIM\tMODIFIER')
       for node in self.nodes:
         print(f'\t{node.id}\t{node.prelim}\t{node.modifier}')
 
     final = self._secondwalk(root, 0, 0)
+    print(f'[position_tree] _secondwalk completed, returns {final}')
     if self.debug:
-      print(f'[position_tree] _secondwalk completed, returns {final}')
       print('\tNode\tX\tY')
       for node in self.nodes:
         print(f'\t{node.id}\t{node.x}\t{node.y}')
