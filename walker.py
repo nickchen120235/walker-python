@@ -108,6 +108,24 @@ class Walker:
         for node in self.nodes:
           print(f'\t{node.left_sibling.id if node.left_sibling else None}\t<- {node.id} ->\t{node.right_sibling.id if node.right_sibling else None}')
 
+  def export_to_json(self, filename: str) -> None:
+    nodes = []
+    links = []
+    for node in self.nodes:
+      if self.debug: print(f'[export_to_json] node {node.id}, x: {node.x}, y: {node.y}')
+      nodes.append({'id': node.id, 'x': float(node.x), 'y': float(node.y)})
+      for child in node.children:
+        if self.debug: print(f'[export_to_json] found link {node.id} -> {child.id}')
+        links.append({'src': node.id, 'to': child.id})
+
+    data = {'nodes': nodes, 'links': links}
+    res = json.dumps(data, indent=2)
+    if self.debug:
+      print('[export_to_json] final json')
+      print(res)
+    with open(filename, 'w') as f:
+      if self.debug: print(f'[export_to_json] export to {filename}')
+      f.write(res)
 
 
   def position_tree(self) -> None:

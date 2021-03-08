@@ -9,3 +9,4 @@ w.config['TREE_SEPARATION'] = 4
 
 w.add_nodes_from_json(DATA)
 w.position_tree()
+w.export_to_json('./out.json')
