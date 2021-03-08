@@ -10,12 +10,29 @@ class Walker:
   #### Tree layout using Walker's Algorithm
 
   Properties:
-  - `config`: configuration of spacing, maximum depth, etc.
   - `nodes`: all nodes in the tree
+  - `config`: configuration of spacing, maximum depth, etc., the default configuration is the following
+
+  ```
+  {
+    'LEVEL_SEPARATION': 160,
+    'NODE_SEPARATION': 7,
+    'TREE_SEPARATION': 20,
+    'NODE_SIZE': 25,
+    'MAX_WIDTH': 25,
+    'MAX_DEPTH': 25,
+    'X_MAX': 10000,
+    'Y_MAX': 10000,
+    'X_TOP': 50,
+    'Y_TOP': 50
+  }
+  ```
 
   Methods:
   - `add_node(node)`: add node to the tree, returns `None`
   - `add_nodes(nodes)`: add list of nodes to the tree, returns `None`
+  - `add_nodes_from_json(filename)`: add nodes to the tree from a json file, returns `None`
+  - `export_to_json(filename)`: export layout result to a json file, returns `None`
   - `position_tree()`: do the layout, returns `None`
   """
   def __init__(self, rootX: int = 50, rootY: int = 50, debug: bool = False) -> None:
@@ -109,6 +126,24 @@ class Walker:
           print(f'\t{node.left_sibling.id if node.left_sibling else None}\t<- {node.id} ->\t{node.right_sibling.id if node.right_sibling else None}')
 
   def export_to_json(self, filename: str) -> None:
+    '''
+    export layout result to a json file in the following format
+    ```
+    {
+      "nodes": [
+        {"id": "<some string>", "x": <x axis>, "y": <y axis>}
+      ],
+      "links": [
+        {"src": "<id from node>", "to": "<id from node>"}
+      ]
+    }
+    ```
+
+    Parameters:
+    - `filename`: type `str`, required, path to json file
+
+    Returns: None
+    '''
     nodes = []
     links = []
     for node in self.nodes:
